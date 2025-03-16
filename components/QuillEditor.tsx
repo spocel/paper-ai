@@ -31,6 +31,8 @@ import {
   setEditorContent,
   setApiKey,
   setUpsreamUrl,
+  addCustomModel,
+  removeCustomModel,
 } from "@/app/store/slices/authSlice";
 import { setContentUpdatedFromNetwork } from "@/app/store/slices/stateSlice";
 //类型声明
@@ -131,9 +133,9 @@ const QEditor = ({ lng }) => {
   const references = useAppSelector((state) => state.auth.referencesRedux);
   const editorContent = useAppSelector((state) => state.auth.editorContent); // 从 Redux store 中获取编辑器内容
   const systemPrompt = useAppSelector((state) => state.auth.systemPrompt);
-  const paperNumberRedux = useAppSelector(
-    (state) => state.state.paperNumberRedux
-  );
+  const paperNumberRedux = useAppSelector((state) => state.state.paperNumberRedux);
+  const customModels = useAppSelector((state) => state.auth.customModels);
+  const [newModelName, setNewModelName] = useState("");
   //supabase
   const supabase = createClient();
   useEffect(() => {
@@ -583,22 +585,63 @@ const QEditor = ({ lng }) => {
           <option value="semanticScholar">semantic scholar</option>
           <option value="pubmed">pubmed</option>
         </select>
-        {/* AI模型 */}
-        <select
-          title={t("选择AI模型")}
-          value={selectedModel}
-          onChange={(e) => setSelectedModel(e.target.value)}
-          className=" border border-gray-300 bg-white py-2 px-3 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500 "
-        >
-          {/* <option value="gpt-3.5-turbo">gpt-3.5-turbo</option> */}
-          <option value="gpt-4o">gpt-4o</option>
-          <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
-          <option value="deepseek-chat">deepseek-chat</option>
-          {/* <option value="grok">grok</option> */}
-          <option value="commandr">commandr</option>
-          <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
-          <option value="llama2-70b-4096">llama2-70b-4096</option>
-        </select>
+        {/* AI模型选择区域 */}
+        <div className="flex items-center space-x-2">
+          <select
+            title={t("选择AI模型")}
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="border border-gray-300 bg-white py-2 px-3 rounded leading-tight focus:outline-none focus:bg-white focus:border-gray-500"
+          >
+            {/* 预设模型 */}
+            <option value="gpt-4o">gpt-4o</option>
+            <option value="gemini-2.0-flash-exp">gemini-2.0-flash-exp</option>
+            <option value="deepseek-chat">deepseek-chat</option>
+            <option value="commandr">commandr</option>
+            <option value="mixtral-8x7b-32768">mixtral-8x7b-32768</option>
+            <option value="llama2-70b-4096">llama2-70b-4096</option>
+            {/* 自定义模型 */}
+            {customModels.map((model) => (
+              <option key={model} value={model}>
+                {model}
+              </option>
+            ))}
+          </select>
+          
+          {/* 添加新模型 */}
+          <input
+            type="text"
+            value={newModelName}
+            onChange={(e) => setNewModelName(e.target.value)}
+            placeholder={t("输入新模型名称")}
+            className="border border-gray-300 text-gray-700 text-sm p-1 rounded"
+          />
+          <button
+            onClick={() => {
+              if (newModelName.trim()) {
+                dispatch(addCustomModel(newModelName.trim()));
+                setNewModelName("");
+                setSelectedModel(newModelName.trim());
+              }
+            }}
+            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-2 rounded text-sm"
+          >
+            {t("添加模型")}
+          </button>
+          
+          {/* 删除当前选中的自定义模型 */}
+          {customModels.includes(selectedModel) && (
+            <button
+              onClick={() => {
+                dispatch(removeCustomModel(selectedModel));
+                setSelectedModel("deepseek-chat"); // 重置为默认模型
+              }}
+              className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded text-sm"
+            >
+              {t("删除模型")}
+            </button>
+          )}
+        </div>
         {/* 进行几轮生成 */}
         <input
           type="number"

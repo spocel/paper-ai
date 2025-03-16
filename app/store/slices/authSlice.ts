@@ -7,6 +7,7 @@ export interface APIState {
   upsreamUrl: string;
   systemPrompt: string;
   showPaperManagement: boolean;
+  customModels: string[];
 }
 
 const initialState: APIState = {
@@ -24,6 +25,7 @@ const initialState: APIState = {
           返回格式举例：
           在某个方面，某论文实现了以下突破...[1],在另一篇论文中，研究了...[2]`,
   showPaperManagement: false,
+  customModels: [],
 };
 
 export const authSlice = createSlice({
@@ -88,6 +90,15 @@ export const authSlice = createSlice({
         state.referencesRedux = newReferences;
       }
     },
+    // 添加自定义模型相关的reducers
+    addCustomModel: (state, action: PayloadAction<string>) => {
+      if (!state.customModels.includes(action.payload)) {
+        state.customModels.push(action.payload);
+      }
+    },
+    removeCustomModel: (state, action: PayloadAction<string>) => {
+      state.customModels = state.customModels.filter(model => model !== action.payload);
+    },
   },
 });
 
@@ -104,6 +115,8 @@ export const {
   setReferencesRedux,
   setSystemPrompt,
   swapReferencesRedux,
+  addCustomModel,
+  removeCustomModel,
 } = authSlice.actions;
 
 export const authReducer = authSlice.reducer;
